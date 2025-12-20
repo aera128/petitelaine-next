@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes:
+    caramellatte --default,
+    halloween --prefersdark;
+}
+
+body {
+  overflow: hidden; /* Prevent scrolling for "App" feel */
+  touch-action: none; /* Disable standard touch gestures */
+  @apply h-[100dvh] w-screen bg-base-100 text-base-content;
+}
