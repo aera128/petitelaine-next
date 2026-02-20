@@ -337,7 +337,7 @@
              </div>
            </div>
            <div class="absolute -bottom-2 -right-2 btn btn-circle btn-sm btn-primary shadow-lg border-2 border-base-100">
-             <RefreshCw class="w-4 h-4" />
+             <Icon name="lucide:refresh-cw" class="w-4 h-4" />
            </div>
          </div>
 

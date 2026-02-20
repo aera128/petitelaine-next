@@ -15,18 +15,18 @@
     "@tailwindcss/vite": "^4.1.18",
     "daisyui": "^5.5.14",
     "lucide-vue-next": "^0.562.0",
-    "nitropack": "^2 || ^3",
-    "nuxi": ">=3",
+    "nitropack": "^2.13.0",
+    "nuxi": "^3.32.0",
     "nuxt": "^4.2.2",
     "nuxt-mcp-dev": "0.3.1",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.1.18",
-    "vite": ">=6",
-    "vue": "^3.5.25",
+    "vite": "^7.3.1",
+    "vue": "^3.5.26",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "^1.2.81",
+    "@iconify-json/lucide": "^1.2.84",
     "@iconify-json/mdi": "^1.2.3"
   }
 }
