@@ -1,6 +1,6 @@
 # AGENTS.md — petitelaine
 
-**Generated:** 2026-02-23
+**Generated:** 2026-02-23 — Updated: 2026-02-23
 
 ## OVERVIEW
 

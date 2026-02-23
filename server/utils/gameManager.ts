@@ -57,7 +57,9 @@ class GameEngine {
         blindMode: false,
         maxRounds: 3,
         voteTimerSeconds: 60,
-        maxPlayers: 10
+        maxPlayers: 10,
+        wolvesCount: 1,
+        goatsCount: 0
       },
       timerEndTime: null,
       round: 0,
@@ -151,7 +153,19 @@ class GameEngine {
       const player = room.players.find(p => p.id === playerId);
       if (!player || !player.isHost) return null;
 
-      room.settings = { ...room.settings, ...settings };
+      const merged = { ...room.settings, ...settings };
+
+      // Enforce: wolvesCount >= 1
+      merged.wolvesCount = Math.max(1, merged.wolvesCount);
+      // Enforce: goatsCount >= 0
+      merged.goatsCount = Math.max(0, merged.goatsCount);
+      // Enforce: moutons must strictly outnumber impostors
+      // i.e. impostors < playerCount / 2  →  impostors <= floor((playerCount - 1) / 2)
+      const playerCount = room.players.length;
+      const maxImpostors = Math.floor((playerCount - 1) / 2);
+      if (merged.wolvesCount + merged.goatsCount > maxImpostors) return null;
+
+      room.settings = merged;
       return room;
   }
 
@@ -283,19 +297,15 @@ class GameEngine {
     const players = room.players;
     const count = players.length;
     
-    // Config based on rules
-    let wolvesCount = 1;
-    let goatCount = 0;
+    // Use settings directly, with safety clamp for 3-player games
+    let wolvesCount = count <= 3 ? 1 : room.settings.wolvesCount;
+    let goatCount   = count <= 3 ? 0 : room.settings.goatsCount;
 
-    if (count == 3) {
-      wolvesCount = 1; 
-      goatCount = 0;
-    } else if (count >= 4 && count <= 5) {
+    // Safety: never let impostors >= moutons (server-side guard)
+    const maxImpostors = Math.floor((count - 1) / 2);
+    if (wolvesCount + goatCount > maxImpostors) {
       wolvesCount = 1;
-      goatCount = 1; // Optional but let's force it for fun/testing rules
-    } else if (count >= 6) {
-      wolvesCount = 2;
-      goatCount = 1;
+      goatCount = 0;
     }
 
     // Reset

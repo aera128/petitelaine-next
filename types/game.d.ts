@@ -24,6 +24,8 @@ export interface GameSettings {
   maxRounds: number;
   voteTimerSeconds: number;
   maxPlayers: number;
+  wolvesCount: number; // Number of Loups (min 1)
+  goatsCount: number;  // Number of Chèvres (min 0) — moutons must outnumber loups+chèvres
 }
 
 export interface GameState {

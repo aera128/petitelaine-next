@@ -42,17 +42,26 @@ Transitions are **automatic** (triggered inside GameEngine, not from _ws.ts):
 - All alive players vote → `resolveVoting()` → next WRITING or ENDED
 
 ### Role Assignment
+Roles are driven by `GameSettings.wolvesCount` and `GameSettings.goatsCount` (host-configurable):
+
 ```ts
-// Count rules (players → wolves, goat)
-3 players:   1 wolf, 0 goat
-4-5 players: 1 wolf, 1 goat
-6+ players:  2 wolves, 1 goat
+// Hard constraints (server-enforced)
+3 players:  always 1 wolf, 0 goat (settings ignored)
+4+ players: host sets wolvesCount (min 1) + goatsCount (min 0)
+            invariant: wolvesCount + goatsCount <= floor((playerCount - 1) / 2)
+            i.e. moutons must strictly outnumber impostors
+
+// Defaults
+wolvesCount: 1, goatsCount: 0
 
 // Words
 wolf → undercoverWord
-goat → null (no word)
+goat → null (no word — must guess)
 sheep → civilWord
 ```
+
+`assignRoles()` has a safety fallback: if settings violate the majority rule at game start, resets to `1 wolf, 0 goat`.
+`updateSettings()` server-side rejects invalid combinations before applying.
 
 ### State Sanitization
 `getSanitizedState(code, playerId)` called per-player before broadcast:

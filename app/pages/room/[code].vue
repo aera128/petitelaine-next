@@ -51,6 +51,52 @@
           </div>
         </div>
 
+        <!-- Wolves + Goats steppers -->
+        <div class="divider text-xs opacity-50 my-1">Composition des rôles</div>
+        <div class="label-text-alt opacity-60 px-1 mb-3 text-xs">
+          Les Moutons doivent toujours être majoritaires. Max imposteurs : {{ Math.floor((gameState.players.length - 1) / 2) }}
+        </div>
+
+        <!-- Loups stepper -->
+        <div class="form-control mb-3">
+          <label class="label py-1">
+            <span class="label-text font-bold flex items-center gap-2">
+              <Icon name="mdi:wolf" class="w-5 h-5 text-error" /> Loups
+            </span>
+            <div class="flex items-center gap-2">
+              <button class="btn btn-xs btn-circle btn-ghost border border-base-300"
+                :disabled="!isHost || gameState.settings.wolvesCount <= 1"
+                @click="updateSetting('wolvesCount', gameState.settings.wolvesCount - 1)">−</button>
+              <span class="font-black text-lg w-6 text-center">{{ gameState.settings.wolvesCount }}</span>
+              <button class="btn btn-xs btn-circle btn-ghost border border-base-300"
+                :disabled="!isHost || gameState.settings.wolvesCount + gameState.settings.goatsCount >= Math.floor((gameState.players.length - 1) / 2)"
+                @click="updateSetting('wolvesCount', gameState.settings.wolvesCount + 1)">+</button>
+            </div>
+          </label>
+        </div>
+
+        <!-- Chèvres stepper -->
+        <div class="form-control mb-3">
+          <label class="label py-1">
+            <span class="label-text font-bold flex items-center gap-2">
+              <Icon name="mdi:goat" class="w-5 h-5 text-warning" /> Chèvres
+              <span v-if="gameState.players.length < 4" class="badge badge-ghost badge-sm">4+ joueurs</span>
+            </span>
+            <div class="flex items-center gap-2">
+              <button class="btn btn-xs btn-circle btn-ghost border border-base-300"
+                :disabled="!isHost || gameState.settings.goatsCount <= 0"
+                @click="updateSetting('goatsCount', gameState.settings.goatsCount - 1)">−</button>
+              <span class="font-black text-lg w-6 text-center">{{ gameState.settings.goatsCount }}</span>
+              <button class="btn btn-xs btn-circle btn-ghost border border-base-300"
+                :disabled="!isHost || gameState.players.length < 4 || gameState.settings.wolvesCount + gameState.settings.goatsCount >= Math.floor((gameState.players.length - 1) / 2)"
+                @click="updateSetting('goatsCount', gameState.settings.goatsCount + 1)">+</button>
+            </div>
+          </label>
+          <div class="label-text-alt opacity-60 px-1 text-xs">
+            La Chèvre n'a pas de mot — elle doit deviner celui des Moutons !
+          </div>
+        </div>
+
         <div class="form-control mb-4">
            <label class="label">
              <span class="label-text font-bold flex items-center gap-2"><Icon name="lucide:timer" class="w-5 h-5" /> Temps de Vote ({{ gameState.settings.voteTimerSeconds }}s)</span>
@@ -87,11 +133,15 @@
       <div v-else class="mb-8 h-6"></div>
       
       <!-- Player Grid -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full justify-items-center">
+      <TransitionGroup 
+        name="player"
+        tag="div" 
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full justify-items-center"
+      >
         <div 
           v-for="player in gameState.players" 
           :key="player.id" 
-          class="flex flex-col items-center animate-pop-in group relative"
+          class="flex flex-col items-center group relative"
         >
           <!-- Kick Button (Host Only) -->
           <button 
@@ -110,7 +160,7 @@
           </div>
           <span class="font-bold mt-1 text-sm bg-base-100 px-3 py-1 rounded-full shadow-sm border border-base-200">{{ player.name }}</span>
         </div>
-      </div>
+      </TransitionGroup>
 
       <!-- Host Controls -->
       <div v-if="isHost" class="mt-12 text-center">
@@ -615,4 +665,13 @@ const leaveToHome = () => {
 .fade-leave-to { opacity: 0; }
 .fade-enter-active,
 .fade-leave-active { transition: opacity 0.3s ease; }
+
+/* Player grid TransitionGroup */
+.player-enter-from { opacity: 0; transform: scale(0.5); }
+.player-enter-active { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.player-enter-to { opacity: 1; transform: scale(1); }
+.player-leave-from { opacity: 1; transform: scale(1); }
+.player-leave-active { transition: all 0.3s ease-in; position: absolute; }
+.player-leave-to { opacity: 0; transform: scale(0.5); }
+.player-move { transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
 </style>

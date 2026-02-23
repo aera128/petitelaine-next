@@ -64,6 +64,18 @@ me: Player | undefined        // own Player object from gameState.players
 isHost: boolean               // me.isHost
 ```
 
+### GameSettings (host-configurable in lobby)
+| Setting | Default | Notes |
+|---------|---------|-------|
+| `blindMode` | `false` | Hides role label from everyone |
+| `maxRounds` | `3` | 3–10 |
+| `voteTimerSeconds` | `60` | 30–180s |
+| `maxPlayers` | `10` | — |
+| `wolvesCount` | `1` | min 1, impostors must be minority |
+| `goatsCount` | `0` | min 0, needs 4+ players, impostors must be minority |
+
+Constraint: `wolvesCount + goatsCount <= floor((players.length - 1) / 2)` — enforced server-side in `updateSettings()` and client-side via disabled `+` buttons.
+
 ### localStorage Keys
 | Key | Value |
 |-----|-------|
