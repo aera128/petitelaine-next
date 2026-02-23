@@ -8,8 +8,18 @@ let reconnectTimer: any = null;
 
 export const useGameSocket = () => {
   const initSocket = (onMessage: (data: any) => void) => {
-    // If already connected, do nothing
-    if (socket.value?.readyState === WebSocket.OPEN) return;
+    // If already connected, just re-attach the message handler and return
+    if (socket.value?.readyState === WebSocket.OPEN) {
+      socket.value.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          onMessage(data);
+        } catch (e) {
+          console.error('[WS] Parse error', e);
+        }
+      };
+      return;
+    }
     
     // Clear any existing reconnect timer
     if (reconnectTimer) clearTimeout(reconnectTimer);

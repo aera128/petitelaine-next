@@ -6,6 +6,7 @@ export const useGameStore = defineStore('game', () => {
   const gameState = ref<GameState | null>(null);
   const myId = ref<string>('');
   const roomError = ref<string | null>(null);
+  const roomReady = ref(false); // flips true on ROOM_CHECK_OK
   const lastError = ref<string | null>(null);
   const wasKicked = ref<boolean>(false);
 
@@ -30,9 +31,11 @@ export const useGameStore = defineStore('game', () => {
       }
       if (data.type === 'ROOM_CHECK_FAIL') {
           roomError.value = 'NOT_FOUND';
+          roomReady.value = false;
       }
       if (data.type === 'ROOM_CHECK_OK') {
           roomError.value = null;
+          roomReady.value = true;
       }
     });
   };
@@ -135,6 +138,7 @@ export const useGameStore = defineStore('game', () => {
     me,
     isHost,
     roomError,
+    roomReady,
     lastError,
     wasKicked,
     nextRound,

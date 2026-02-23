@@ -1,7 +1,12 @@
 <template>
   <div class="max-w-md w-full flex flex-col gap-6">
-    <!-- Logo/Title Animation placeholder if needed, but Header has it -->
-    
+
+    <!-- Loading state before localStorage is read -->
+    <div v-if="!isProfileLoaded" class="flex flex-col items-center gap-4 opacity-75 py-20">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
+
+    <template v-else>
     <!-- Profile Section -->
     <div class="card bg-base-200/80 backdrop-blur-sm shadow-xl border-b-4 border-base-300">
       <div class="card-body items-center text-center p-6">
@@ -58,6 +63,7 @@
         </button>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
@@ -70,6 +76,7 @@ const gameStore = useGameStore();
 const name = ref('');
 const avatarSeed = ref('');
 const joinCode = ref('');
+const isProfileLoaded = ref(false);
 
 const avatarUrl = computed(() => `https://api.dicebear.com/9.x/dylan/svg?seed=${avatarSeed.value}&backgroundColor=b6e3f4,c0aede,d1d4f9`);
 
@@ -97,6 +104,7 @@ onMounted(() => {
     avatarSeed.value = Math.random().toString(36).substring(7);
     localStorage.setItem('petitelaine-avatar', avatarSeed.value);
   }
+  isProfileLoaded.value = true;
 });
 
 const handleCreate = () => {

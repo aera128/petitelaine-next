@@ -8,7 +8,8 @@
     @close="closeAlert" 
   />
 
-  <div v-if="gameState" class="w-full max-w-4xl flex flex-col items-center gap-4 h-full">
+  <Transition name="fade" mode="out-in">
+  <div v-if="gameState" key="game" class="w-full max-w-4xl flex flex-col items-center gap-4 h-full relative overflow-hidden">
     
     <!-- Error Toast -->
     <div v-if="gameStore.lastError" class="toast toast-top toast-center z-50">
@@ -72,8 +73,11 @@
       </div>
     </dialog>
 
+    <!-- PHASE TRANSITIONS -->
+    <Transition name="phase" mode="out-in">
+
     <!-- PHASE: LOBBY -->
-    <div v-if="gameState.phase === 'LOBBY'" class="flex-1 w-full flex flex-col items-center justify-center p-4">
+    <div v-if="gameState.phase === 'LOBBY'" key="LOBBY" class="flex-1 w-full flex flex-col items-center justify-center p-4">
       <h2 class="text-3xl font-black text-center mb-2 drop-shadow-md">
         En attente du troupeau...
       </h2>
@@ -127,7 +131,7 @@
     </div>
 
     <!-- PHASE: WRITING -->
-    <div v-else-if="gameState.phase === 'WRITING'" class="flex-1 flex flex-col items-center justify-center w-full gap-8">
+    <div v-else-if="gameState.phase === 'WRITING'" key="WRITING" class="flex-1 flex flex-col items-center justify-center w-full gap-8">
       <!-- Role Info -->
       <div class="card bg-base-100 shadow-xl border-4 border-base-300 w-full max-w-sm animate-pop-in">
         <div class="card-body items-center text-center">
@@ -182,7 +186,7 @@
     </div>
 
     <!-- PHASE: REVEAL -->
-    <div v-else-if="gameState.phase === 'REVEAL'" class="flex-1 flex flex-col items-center w-full p-4">
+    <div v-else-if="gameState.phase === 'REVEAL'" key="REVEAL" class="flex-1 flex flex-col items-center w-full p-4">
       <h2 class="text-3xl font-black mb-8 text-center bg-base-100 px-4 py-2 rounded-xl shadow-sm border-2 border-base-200 flex items-center gap-3">
         La Récolte <Icon name="mdi:barley" class="w-8 h-8" />
       </h2>
@@ -208,15 +212,15 @@
          </div>
       </div>
 
-      <div class="fixed bottom-8 flex flex-col items-center gap-2 w-full px-4">
-         <!-- Propose Vote (Everyone) -->
+      <div class="flex flex-col items-center gap-3 w-full px-4 mt-8 pb-24">
+         <!-- Propose Vote (Everyone alive) -->
          <button 
             v-if="gameStore.me?.isAlive"
             class="btn btn-neutral btn-sm opacity-90" 
             :class="gameStore.me?.votedFor === 'PROPOSE_VOTE' ? 'btn-success' : ''"
             @click="gameStore.proposeVote()"
          >
-            {{ gameStore.me?.votedFor === 'PROPOSE_VOTE' ? 'Vote demandé' : 'Demander le Vote' }} 
+            {{ gameStore.me?.votedFor === 'PROPOSE_VOTE' ? 'Vote demandé ✓' : 'Demander le Vote' }} 
             ({{ gameState.requestVoteCount || 0 }}/{{ Math.floor(alivePlayers.length / 2) + 1 }})
          </button>
 
@@ -241,7 +245,7 @@
     </div>
 
     <!-- PHASE: VOTING -->
-    <div v-else-if="gameState.phase === 'VOTING'" class="flex-1 flex flex-col items-center w-full p-4">
+    <div v-else-if="gameState.phase === 'VOTING'" key="VOTING" class="flex-1 flex flex-col items-center w-full p-4">
       <h2 class="text-3xl font-black mb-2 text-error drop-shadow-sm">VOTEZ !</h2>
       <p class="mb-8 font-bold opacity-60">Qui est l'intrus ? Tap pour voter.</p>
       
@@ -279,7 +283,7 @@
     </div>
 
     <!-- PHASE: ENDED -->
-    <div v-else-if="gameState.phase === 'ENDED'" class="flex-1 flex flex-col items-center justify-center text-center p-4">
+    <div v-else-if="gameState.phase === 'ENDED'" key="ENDED" class="flex-1 flex flex-col items-center justify-center text-center p-4">
        <div class="text-5xl font-black mb-4 animate-bounce flex items-center justify-center gap-4">
          <div v-if="gameState.winnerTeam === 'VILLAGE'" class="flex items-center gap-2">
            <Icon name="lucide:trophy" class="text-warning" /> LES MOUTONS
@@ -322,11 +326,19 @@
        </div>
     </div>
 
+    </Transition>
+
   </div>
   
-  <div v-else class="flex flex-col items-center justify-center p-4 w-full h-full max-w-md">
+  <div v-else key="join" class="flex flex-col items-center justify-center p-4 w-full h-full max-w-md">
+     <!-- Loading while profile loads or room is being checked -->
+     <div v-if="!isProfileLoaded || isCheckingRoom" class="flex flex-col items-center gap-4 opacity-75">
+       <span class="loading loading-spinner loading-lg"></span>
+       <p class="font-bold">{{ !isProfileLoaded ? 'Chargement...' : 'Vérification de la salle...' }}</p>
+     </div>
+
      <!-- JOIN FORM for Direct Access -->
-     <div class="card bg-base-200/80 backdrop-blur-sm shadow-xl border-b-4 border-base-300 w-full animate-pop-in">
+     <div v-else class="card bg-base-200/80 backdrop-blur-sm shadow-xl border-b-4 border-base-300 w-full animate-pop-in">
        <div class="card-body items-center text-center p-6">
          <h2 class="card-title text-2xl font-black uppercase mb-4 opacity-75">Qui êtes-vous ?</h2>
          
@@ -343,24 +355,28 @@
 
          <div class="form-control w-full max-w-xs mt-4">
            <input 
-             v-model="name" 
+             v-model="joinName" 
              type="text" 
              placeholder="PSEUDO" 
              class="input input-lg input-bordered text-center font-black text-xl placeholder:text-base-content/20 bg-base-100 focus:outline-none" 
              maxlength="12"
+             @keyup.enter="handleDirectJoin"
+             autofocus
            />
          </div>
 
          <button 
            class="btn btn-primary btn-xl w-full mt-6 text-xl font-black border-b-8 border-primary-content active:border-b-0 active:translate-y-2 transition-all"
            @click="handleDirectJoin"
-           :disabled="!name.trim()"
+           :disabled="!joinName.trim() || isJoining"
          >
+           <span v-if="isJoining" class="loading loading-spinner loading-sm mr-2"></span>
            REJOINDRE LA PARTIE 🐑
          </button>
        </div>
      </div>
   </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -402,9 +418,13 @@ const copyRoomCode = () => {
   }
 };
 
-// Join Form Refs (shared with index.vue via localStorage)
-const name = ref('');
+// Join Form state
+const joinName = ref('');
 const avatarSeed = ref('');
+const isCheckingRoom = ref(true);  // true until ROOM_CHECK_OK/FAIL
+const isJoining = ref(false);
+const isProfileLoaded = ref(false); // true after localStorage loaded in onMounted
+
 const avatarUrl = computed(() => `https://api.dicebear.com/9.x/dylan/svg?seed=${avatarSeed.value}&backgroundColor=b6e3f4,c0aede,d1d4f9`);
 
 const refreshAvatar = () => {
@@ -412,29 +432,25 @@ const refreshAvatar = () => {
   localStorage.setItem('petitelaine-avatar', avatarSeed.value);
 };
 
-// Load saved profile on client
-if (import.meta.client) {
-  const savedName = localStorage.getItem('petitelaine-name');
-  const savedAvatar = localStorage.getItem('petitelaine-avatar');
-  if (savedName) name.value = savedName;
-  if (savedAvatar) avatarSeed.value = savedAvatar;
-  else {
-    avatarSeed.value = Math.random().toString(36).substring(7);
-    localStorage.setItem('petitelaine-avatar', avatarSeed.value);
-  }
-}
-
 // Persist name on change
-watch(name, (val) => {
+watch(joinName, (val) => {
   if (import.meta.client) localStorage.setItem('petitelaine-name', val);
 });
 
 const handleDirectJoin = () => {
-    if (name.value.trim()) {
-        const code = route.params.code as string;
-        gameStore.joinRoom(code, name.value.trim(), avatarUrl.value);
-    }
+    if (!joinName.value.trim() || isJoining.value) return;
+    const code = route.params.code as string;
+    isJoining.value = true;
+    gameStore.joinRoom(code, joinName.value.trim(), avatarUrl.value);
 }
+
+// Reset isJoining if gameState arrives (join succeeded) or on error
+watch(() => gameStore.gameState, (val) => {
+    if (val) isJoining.value = false;
+});
+watch(() => gameStore.lastError, (val) => {
+    if (val) isJoining.value = false;
+});
 
 // Kick Detection
 watch(() => gameStore.gameState, (newVal, oldVal) => {
@@ -458,6 +474,7 @@ let timerInterval: any = null;
 // Room Validation Logic
 watch(() => gameStore.roomError, (err) => {
     if (err === 'NOT_FOUND') {
+        isCheckingRoom.value = false;
         showAlert("Cette salle n'existe pas !", 'error', 'Erreur', () => {
             router.replace('/');
         });
@@ -477,18 +494,39 @@ watch(() => gameStore.wasKicked, (kicked) => {
 
 onMounted(() => {
   const code = route.params.code as string;
-  
-  // Init socket if not connected (Direct Access)
-  if (!gameStore.isConnected) {
-      gameStore.init();
-      // Wait for connection to verify room? 
-      // checkRoom sends message. If not connected, it queues.
-      // But we need to wait for open. useGameSocket handles caching?
-      // Yes, sends when open.
-      gameStore.checkRoom(code);
-  } else if (!gameStore.gameState) {
-      // Connected but no state (maybe came from home without joining?)
-      gameStore.checkRoom(code);
+
+  // Load saved profile from localStorage
+  const savedName = localStorage.getItem('petitelaine-name');
+  const savedAvatar = localStorage.getItem('petitelaine-avatar');
+  if (savedName) joinName.value = savedName;
+  if (savedAvatar) {
+    avatarSeed.value = savedAvatar;
+  } else {
+    avatarSeed.value = Math.random().toString(36).substring(7);
+    localStorage.setItem('petitelaine-avatar', avatarSeed.value);
+  }
+  isProfileLoaded.value = true;
+
+  // Always init to (re)attach the onMessage handler on this component.
+  gameStore.init();
+
+  if (gameStore.gameState) {
+    // Already in a game (e.g. navigated from home after joining)
+    isCheckingRoom.value = false;
+  } else {
+    // Reset roomReady so the watcher fires cleanly
+    gameStore.roomReady = false;
+    isCheckingRoom.value = true;
+
+    // One-shot watcher: hide spinner once server confirms room exists
+    const stopWatch = watch(() => gameStore.roomReady, (ready) => {
+      if (ready) {
+        isCheckingRoom.value = false;
+        stopWatch();
+      }
+    });
+
+    gameStore.checkRoom(code);
   }
 
   // Timer
@@ -563,4 +601,18 @@ const leaveToHome = () => {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Phase transition: slide + fade (right in, left out) */
+.phase-enter-from { opacity: 0; transform: translateX(40px); }
+.phase-enter-active { transition: all 0.4s ease-out; }
+.phase-enter-to { opacity: 1; transform: translateX(0); }
+.phase-leave-from { opacity: 1; transform: translateX(0); }
+.phase-leave-active { transition: all 0.3s ease-in; position: absolute; width: 100%; }
+.phase-leave-to { opacity: 0; transform: translateX(-40px); }
+
+/* Fade transition: join form ↔ game */
+.fade-enter-from,
+.fade-leave-to { opacity: 0; }
+.fade-enter-active,
+.fade-leave-active { transition: opacity 0.3s ease; }
 </style>
