@@ -14,17 +14,20 @@ const broadcastState = (roomCode: string) => {
 
     room.players.forEach(p => {
         const peer = playerPeers.get(p.id);
-        if (peer) {
-            // We can check if peer is still open/valid if needed
-            // But Map should be kept in sync.
-            try {
-                peer.send(JSON.stringify({
-                    type: 'GAME_STATE',
-                    payload: gameManager.getSanitizedState(roomCode, p.id)
-                }));
-            } catch (e) {
-                console.warn(`[WS] Failed to send state to ${p.id}`, e);
+        if (!peer) return;
+        try {
+            const result = peer.send(JSON.stringify({
+                type: 'GAME_STATE',
+                payload: gameManager.getSanitizedState(roomCode, p.id)
+            }));
+            // peer.send() may return a Promise — catch async EPIPE rejections
+            if (result && typeof result.catch === 'function') {
+                result.catch((e: any) => {
+                    console.warn(`[WS] Async send failed for ${p.id}:`, e?.message ?? e);
+                });
             }
+        } catch (e: any) {
+            console.warn(`[WS] Sync send failed for ${p.id}:`, e?.message ?? e);
         }
     });
 };
